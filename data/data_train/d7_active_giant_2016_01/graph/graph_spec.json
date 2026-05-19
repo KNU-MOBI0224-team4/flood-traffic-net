@@ -1,0 +1,7 @@
+{
+  "node_count": 329,
+  "undirected_edge_count": 774,
+  "directed_edge_count": 1548,
+  "adjacency": "A[i,j] = 1 when road node i and road node j are connected",
+  "self_loops": false
+}

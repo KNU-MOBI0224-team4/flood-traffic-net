@@ -1,0 +1,30 @@
+{
+  "dataset": "d7_active_giant_2016_01",
+  "shape": {
+    "T": 744,
+    "N": 329,
+    "F_dynamic": 7
+  },
+  "dynamic_features": [
+    "rainfall_mm_1h",
+    "avg_speed_median",
+    "total_flow_median",
+    "avg_occupancy_median",
+    "avg_speed_median_delta_1h",
+    "total_flow_median_delta_1h",
+    "avg_occupancy_median_delta_1h"
+  ],
+  "primary_dynamic_inputs": [
+    "rainfall_mm_1h",
+    "avg_speed_median",
+    "total_flow_median",
+    "avg_occupancy_median"
+  ],
+  "traffic_instability_features": [
+    "avg_speed_median_delta_1h",
+    "total_flow_median_delta_1h",
+    "avg_occupancy_median_delta_1h"
+  ],
+  "delta_definition": "value[t] - value[t-1], using only past/current information at anchor time t",
+  "missing_values": "NaN in X_dynamic; availability is stored in input_mask"
+}

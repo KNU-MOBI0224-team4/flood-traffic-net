@@ -1,0 +1,143 @@
+{
+  "label_root": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold",
+  "folders": [
+    {
+      "node_column": "segment_id",
+      "node_count": 329,
+      "nodes_with_train_z_positive": 324,
+      "nodes_with_train_z_positive_rate": 0.9848024316109423,
+      "total_train_z_positive": 5817,
+      "total_train_z_mask": 14164731,
+      "normalization": {
+        "definition": "zscore(log1p(node_z_history_count)) across nodes in this label folder",
+        "log1p_mean": 2.730642531630443,
+        "log1p_std_population": 0.7173754907414007
+      },
+      "count_summary": {
+        "min": 0,
+        "max": 42,
+        "mean": 17.680851063829788
+      },
+      "label_dir": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p97/fold_1_train2016_2020_val2021_test2022",
+      "outputs": {
+        "static_node_features": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p97/fold_1_train2016_2020_val2021_test2022/static_node_features_z_history.csv",
+        "summary": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p97/fold_1_train2016_2020_val2021_test2022/static_node_features_z_history_summary.json"
+      }
+    },
+    {
+      "node_column": "segment_id",
+      "node_count": 329,
+      "nodes_with_train_z_positive": 325,
+      "nodes_with_train_z_positive_rate": 0.9878419452887538,
+      "total_train_z_positive": 6992,
+      "total_train_z_mask": 17011896,
+      "normalization": {
+        "definition": "zscore(log1p(node_z_history_count)) across nodes in this label folder",
+        "log1p_mean": 2.89015466066182,
+        "log1p_std_population": 0.7202418604455613
+      },
+      "count_summary": {
+        "min": 0,
+        "max": 147,
+        "mean": 21.252279635258358
+      },
+      "label_dir": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p97/fold_2_train2016_2021_val2022_test2023",
+      "outputs": {
+        "static_node_features": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p97/fold_2_train2016_2021_val2022_test2023/static_node_features_z_history.csv",
+        "summary": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p97/fold_2_train2016_2021_val2022_test2023/static_node_features_z_history_summary.json"
+      }
+    },
+    {
+      "node_column": "segment_id",
+      "node_count": 329,
+      "nodes_with_train_z_positive": 325,
+      "nodes_with_train_z_positive_rate": 0.9878419452887538,
+      "total_train_z_positive": 6961,
+      "total_train_z_mask": 19863016,
+      "normalization": {
+        "definition": "zscore(log1p(node_z_history_count)) across nodes in this label folder",
+        "log1p_mean": 2.902502990732224,
+        "log1p_std_population": 0.6924949832871016
+      },
+      "count_summary": {
+        "min": 0,
+        "max": 182,
+        "mean": 21.1580547112462
+      },
+      "label_dir": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p97/fold_3_train2016_2022_val2023_test2024",
+      "outputs": {
+        "static_node_features": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p97/fold_3_train2016_2022_val2023_test2024/static_node_features_z_history.csv",
+        "summary": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p97/fold_3_train2016_2022_val2023_test2024/static_node_features_z_history_summary.json"
+      }
+    },
+    {
+      "node_column": "segment_id",
+      "node_count": 329,
+      "nodes_with_train_z_positive": 322,
+      "nodes_with_train_z_positive_rate": 0.9787234042553191,
+      "total_train_z_positive": 3400,
+      "total_train_z_mask": 14172050,
+      "normalization": {
+        "definition": "zscore(log1p(node_z_history_count)) across nodes in this label folder",
+        "log1p_mean": 2.226397049512025,
+        "log1p_std_population": 0.7094702865845333
+      },
+      "count_summary": {
+        "min": 0,
+        "max": 27,
+        "mean": 10.33434650455927
+      },
+      "label_dir": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p99/fold_1_train2016_2020_val2021_test2022",
+      "outputs": {
+        "static_node_features": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p99/fold_1_train2016_2020_val2021_test2022/static_node_features_z_history.csv",
+        "summary": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p99/fold_1_train2016_2020_val2021_test2022/static_node_features_z_history_summary.json"
+      }
+    },
+    {
+      "node_column": "segment_id",
+      "node_count": 329,
+      "nodes_with_train_z_positive": 322,
+      "nodes_with_train_z_positive_rate": 0.9787234042553191,
+      "total_train_z_positive": 4116,
+      "total_train_z_mask": 17024380,
+      "normalization": {
+        "definition": "zscore(log1p(node_z_history_count)) across nodes in this label folder",
+        "log1p_mean": 2.4157229027790934,
+        "log1p_std_population": 0.6913982470518676
+      },
+      "count_summary": {
+        "min": 0,
+        "max": 34,
+        "mean": 12.51063829787234
+      },
+      "label_dir": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p99/fold_2_train2016_2021_val2022_test2023",
+      "outputs": {
+        "static_node_features": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p99/fold_2_train2016_2021_val2022_test2023/static_node_features_z_history.csv",
+        "summary": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p99/fold_2_train2016_2021_val2022_test2023/static_node_features_z_history_summary.json"
+      }
+    },
+    {
+      "node_column": "segment_id",
+      "node_count": 329,
+      "nodes_with_train_z_positive": 322,
+      "nodes_with_train_z_positive_rate": 0.9787234042553191,
+      "total_train_z_positive": 4102,
+      "total_train_z_mask": 19876351,
+      "normalization": {
+        "definition": "zscore(log1p(node_z_history_count)) across nodes in this label folder",
+        "log1p_mean": 2.403583901802866,
+        "log1p_std_population": 0.702469686485101
+      },
+      "count_summary": {
+        "min": 0,
+        "max": 48,
+        "mean": 12.46808510638298
+      },
+      "label_dir": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p99/fold_3_train2016_2022_val2023_test2024",
+      "outputs": {
+        "static_node_features": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p99/fold_3_train2016_2022_val2023_test2024/static_node_features_z_history.csv",
+        "summary": "Flood_induced_road_paralysis/data/processed/d7_active_giant_labels_rolling_3fold/p99/fold_3_train2016_2022_val2023_test2024/static_node_features_z_history_summary.json"
+      }
+    }
+  ]
+}

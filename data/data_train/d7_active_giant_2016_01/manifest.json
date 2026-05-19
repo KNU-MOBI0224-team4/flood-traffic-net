@@ -1,0 +1,71 @@
+{
+  "dataset": "d7_active_giant_2016_01",
+  "source": "data_sample",
+  "output": "data_train/d7_active_giant_2016_01",
+  "graph": {
+    "node_count": 329,
+    "undirected_edge_count": 774,
+    "directed_edge_count": 1548
+  },
+  "features": {
+    "time_count": 744,
+    "node_count": 329,
+    "feature_count": 7,
+    "finite_by_feature": {
+      "rainfall_mm_1h": 244776,
+      "avg_speed_median": 240312,
+      "total_flow_median": 240312,
+      "avg_occupancy_median": 240312,
+      "avg_speed_median_delta_1h": 239989,
+      "total_flow_median_delta_1h": 239989,
+      "avg_occupancy_median_delta_1h": 239989
+    }
+  },
+  "labels": {
+    "p99": {
+      "fold_1_train2016_2020_val2021_test2022": {
+        "y_positive": 802,
+        "z_positive": 340,
+        "z_mask": 239510,
+        "label_available": 240312
+      },
+      "fold_2_train2016_2021_val2022_test2023": {
+        "y_positive": 734,
+        "z_positive": 304,
+        "z_mask": 239578,
+        "label_available": 240312
+      },
+      "fold_3_train2016_2022_val2023_test2024": {
+        "y_positive": 777,
+        "z_positive": 332,
+        "z_mask": 239535,
+        "label_available": 240312
+      }
+    },
+    "p97": {
+      "fold_1_train2016_2020_val2021_test2022": {
+        "y_positive": 1057,
+        "z_positive": 455,
+        "z_mask": 239255,
+        "label_available": 240312
+      },
+      "fold_2_train2016_2021_val2022_test2023": {
+        "y_positive": 1015,
+        "z_positive": 445,
+        "z_mask": 239297,
+        "label_available": 240312
+      },
+      "fold_3_train2016_2022_val2023_test2024": {
+        "y_positive": 1052,
+        "z_positive": 452,
+        "z_mask": 239260,
+        "label_available": 240312
+      }
+    }
+  },
+  "array_files": {
+    "graph": "graph/A.npz",
+    "dynamic_features": "features/X_dynamic.npz",
+    "labels": "labels/{p97,p99}/{fold}/targets.npz"
+  }
+}
