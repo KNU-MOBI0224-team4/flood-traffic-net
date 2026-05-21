@@ -1,12 +1,3 @@
-#!/usr/bin/env python3
-"""Build a compact train-ready tensor package from the D7 sample files.
-
-The script intentionally uses only the Python standard library so the sample can
-be regenerated before project dependencies are installed. It writes NumPy-
-compatible `.npz` archives manually; downstream training code can read them with
-`numpy.load(...)`.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -139,16 +130,16 @@ def build_dynamic_features(
     out_dir: Path,
     node_ids: list[str],
 ) -> tuple[list[str], dict[str, Any]]:
-    rainfall_path = (
-        source_dir
-        / "samples/d7_active_giant/2016_01/rainfall/D7_active_giant_node_rainfall_2016_01.csv.gz"
-    )
-    traffic_path = (
-        source_dir
-        / "samples/d7_active_giant/2016_01/traffic/D7_active_giant_node_hourly_2016_01.csv.gz"
-    )
+    sample_root = source_dir / "samples/d7_active_giant"
+    month_dirs = sorted([d for d in sample_root.iterdir() if d.is_dir()])
 
-    timestamps = collect_timestamps_from_gzip(rainfall_path)
+    all_timestamps: set[str] = set()
+    for month_dir in month_dirs:
+        rainfall_path = month_dir / "rainfall" / f"D7_active_giant_node_rainfall_{month_dir.name}.csv.gz"
+        if rainfall_path.exists():
+            all_timestamps.update(collect_timestamps_from_gzip(rainfall_path))
+            
+    timestamps = sorted(list(all_timestamps))
     timestamp_index = {timestamp: idx for idx, timestamp in enumerate(timestamps)}
     node_index = {node_id: idx for idx, node_id in enumerate(node_ids)}
 
@@ -170,16 +161,22 @@ def build_dynamic_features(
         if math.isfinite(value):
             mask[idx] = 1
 
-    with gzip.open(rainfall_path, "rt", encoding="utf-8", newline="") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            set_value(row["timestamp"], row["segment_id"], "rainfall_mm_1h", safe_float(row.get("rainfall_mm_1h")))
+    for month_dir in month_dirs:
+        rainfall_path = month_dir / "rainfall" / f"D7_active_giant_node_rainfall_{month_dir.name}.csv.gz"
+        traffic_path = month_dir / "traffic" / f"D7_active_giant_node_hourly_{month_dir.name}.csv.gz"
 
-    with gzip.open(traffic_path, "rt", encoding="utf-8", newline="") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            for feature_name, source_col in TRAFFIC_FEATURE_TO_SOURCE.items():
-                set_value(row["timestamp"], row["segment_id"], feature_name, safe_float(row.get(source_col)))
+        if rainfall_path.exists():
+            with gzip.open(rainfall_path, "rt", encoding="utf-8", newline="") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    set_value(row["timestamp"], row["segment_id"], "rainfall_mm_1h", safe_float(row.get("rainfall_mm_1h")))
+
+        if traffic_path.exists():
+            with gzip.open(traffic_path, "rt", encoding="utf-8", newline="") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    for feature_name, source_col in TRAFFIC_FEATURE_TO_SOURCE.items():
+                        set_value(row["timestamp"], row["segment_id"], feature_name, safe_float(row.get(source_col)))
 
     delta_pairs = [
         ("avg_speed_median", "avg_speed_median_delta_1h"),
@@ -223,7 +220,7 @@ def build_dynamic_features(
     write_json(
         out_dir / "features/feature_spec.json",
         {
-            "dataset": "d7_active_giant_2016_01",
+            "dataset": "d7_active_giant_full",
             "shape": {"T": time_count, "N": node_count, "F_dynamic": feature_count},
             "dynamic_features": DYNAMIC_FEATURES,
             "primary_dynamic_inputs": [
@@ -338,35 +335,43 @@ def build_labels(
     node_count = len(node_ids)
     label_summary: dict[str, Any] = {}
 
+    sample_root = source_dir / "samples/d7_active_giant"
+    month_dirs = sorted([d for d in sample_root.iterdir() if d.is_dir()])
+
     for percentile in PERCENTILES:
         label_summary[percentile] = {}
         for fold in FOLDS:
-            label_path = (
-                source_dir
-                / "samples/d7_active_giant/2016_01/labels"
-                / percentile
-                / fold
-                / f"D7_active_giant_labels_{percentile}_2016_01.csv.gz"
-            )
             y = bytearray(time_count * node_count)
             z = bytearray(time_count * node_count)
             z_mask = bytearray(time_count * node_count)
             label_available = bytearray(time_count * node_count)
             split_values: set[str] = set()
 
-            with gzip.open(label_path, "rt", encoding="utf-8", newline="") as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    t_idx = timestamp_index.get(row["timestamp"])
-                    n_idx = node_index.get(row["segment_id"])
-                    if t_idx is None or n_idx is None:
-                        continue
-                    idx = t_idx * node_count + n_idx
-                    split_values.add(row["split"])
-                    label_available[idx] = 1 if row.get("label_available") == "1" else 0
-                    y[idx] = 1 if row.get("y") == "1" else 0
-                    z[idx] = 1 if row.get("z") == "1" else 0
-                    z_mask[idx] = 1 if row.get("z_mask") == "1" else 0
+            for month_dir in month_dirs:
+                label_path = (
+                    month_dir
+                    / "labels"
+                    / percentile
+                    / fold
+                    / f"D7_active_giant_labels_{percentile}_{month_dir.name}.csv.gz"
+                )
+
+                if not label_path.exists():
+                    continue
+
+                with gzip.open(label_path, "rt", encoding="utf-8", newline="") as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        t_idx = timestamp_index.get(row["timestamp"])
+                        n_idx = node_index.get(row["segment_id"])
+                        if t_idx is None or n_idx is None:
+                            continue
+                        idx = t_idx * node_count + n_idx
+                        split_values.add(row["split"])
+                        label_available[idx] = 1 if row.get("label_available") == "1" else 0
+                        y[idx] = 1 if row.get("y") == "1" else 0
+                        z[idx] = 1 if row.get("z") == "1" else 0
+                        z_mask[idx] = 1 if row.get("z_mask") == "1" else 0
 
             target_dir = out_dir / "labels" / percentile / fold
             write_npz(
@@ -378,30 +383,22 @@ def build_labels(
                     "label_available": ((time_count, node_count), "|u1", uint8_bytes(label_available)),
                 },
             )
-            shutil.copy2(
-                source_dir
-                / "static/d7_active_giant/z_history"
-                / percentile
-                / fold
-                / "static_node_features_z_history.csv",
-                target_dir / "X_static.csv",
-            )
-            shutil.copy2(
-                source_dir
-                / "metadata/d7_active_giant/label_thresholds"
-                / percentile
-                / fold
-                / f"D7_active_giant_label_node_thresholds_{percentile}.csv",
-                target_dir / "label_node_thresholds.csv",
-            )
-            shutil.copy2(
-                source_dir
-                / "metadata/d7_active_giant/label_summaries"
-                / percentile
-                / fold
-                / f"D7_active_giant_labels_{percentile}_summary.json",
-                target_dir / "label_summary.json",
-            )
+            
+            static_history_path = source_dir / "static/d7_active_giant/z_history" / percentile / fold / "static_node_features_z_history.csv"
+            if static_history_path.exists():
+                target_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(static_history_path, target_dir / "X_static.csv")
+
+            threshold_path = source_dir / "metadata/d7_active_giant/label_thresholds" / percentile / fold / f"D7_active_giant_label_node_thresholds_{percentile}.csv"
+            if threshold_path.exists():
+                target_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(threshold_path, target_dir / "label_node_thresholds.csv")
+            
+            summary_path = source_dir / "metadata/d7_active_giant/label_summaries" / percentile / fold / f"D7_active_giant_labels_{percentile}_summary.json"
+            if summary_path.exists():
+                target_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(summary_path, target_dir / "label_summary.json")
+
             write_json(
                 target_dir / "target_spec.json",
                 {
@@ -439,7 +436,7 @@ def main() -> None:
 
     repo_root = args.repo_root
     source_dir = repo_root / "data_sample"
-    out_dir = repo_root / "data_train" / "d7_active_giant_2016_01"
+    out_dir = repo_root / "data_train" / "d7_active_giant_full"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     nodes = read_csv_rows(source_dir / "graph/d7_active_giant/D7_active_giant_nodes.csv")
@@ -450,21 +447,27 @@ def main() -> None:
     label_summary = build_labels(source_dir, out_dir, timestamps, node_ids)
 
     (out_dir / "summaries").mkdir(parents=True, exist_ok=True)
-    shutil.copy2(
-        source_dir / "summaries/d7_active_giant/D7_rolling_3fold_label_summary.csv",
-        out_dir / "summaries/D7_rolling_3fold_label_summary.csv",
-    )
-    shutil.copy2(
-        source_dir / "summaries/d7_active_giant/static_node_features_z_history_all_summary.json",
-        out_dir / "summaries/static_node_features_z_history_all_summary.json",
-    )
+    
+    summary_csv_src = source_dir / "summaries/d7_active_giant/D7_rolling_3fold_label_summary.csv"
+    if summary_csv_src.exists():
+        shutil.copy2(
+            summary_csv_src,
+            out_dir / "summaries/D7_rolling_3fold_label_summary.csv",
+        )
+        
+    summary_json_src = source_dir / "summaries/d7_active_giant/static_node_features_z_history_all_summary.json"
+    if summary_json_src.exists():
+        shutil.copy2(
+            summary_json_src,
+            out_dir / "summaries/static_node_features_z_history_all_summary.json",
+        )
 
     write_json(
         out_dir / "manifest.json",
         {
-            "dataset": "d7_active_giant_2016_01",
+            "dataset": "d7_active_giant_full",
             "source": "data_sample",
-            "output": "data_train/d7_active_giant_2016_01",
+            "output": "data_train/d7_active_giant_full",
             "graph": graph_summary,
             "features": feature_summary,
             "labels": label_summary,

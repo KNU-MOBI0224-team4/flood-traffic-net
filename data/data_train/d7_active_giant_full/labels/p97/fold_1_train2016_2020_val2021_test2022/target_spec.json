@@ -1,0 +1,18 @@
+{
+  "target": "z",
+  "state_label": "y",
+  "loss_mask": "z_mask",
+  "rainfall_seed_percentile": "p97",
+  "fold": "fold_1_train2016_2020_val2021_test2022",
+  "shape": {
+    "T": 744,
+    "N": 329
+  },
+  "split_values_present_in_sample": [
+    "train"
+  ],
+  "notes": [
+    "Train/eval loss should be computed only where z_mask == 1.",
+    "Current y == 1 node-time cells are excluded from z_mask."
+  ]
+}

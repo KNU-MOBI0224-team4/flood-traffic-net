@@ -21,6 +21,34 @@ class FloodSTGCNDataset(Dataset):
         x_data = np.load(x_path)
         self.X = x_data["X_dynamic"].astype(np.float32)
 
+        # ---------------------------------
+        # NaN / Inf stabilization
+        # ---------------------------------
+        self.X = np.nan_to_num(
+            self.X,
+            nan=0.0,
+            posinf=0.0,
+            neginf=0.0,
+        )
+
+        # ---------------------------------
+        # Simple z-score normalization
+        # ---------------------------------
+        mean = self.X.mean(axis=(0, 1), keepdims=True)
+        std = self.X.std(axis=(0, 1), keepdims=True)
+
+        self.X = (self.X - mean) / (std + 1e-6)
+
+        # ---------------------------------
+        # Debug
+        # ---------------------------------
+        print("X shape:", self.X.shape)
+        print("X min:", self.X.min())
+        print("X max:", self.X.max())
+        print("NaN in X:", np.isnan(self.X).sum())
+
+
+
         target_data = np.load(target_path)
         self.z = target_data["z"].astype(np.float32)
         self.z_mask = target_data["z_mask"].astype(np.bool_)
