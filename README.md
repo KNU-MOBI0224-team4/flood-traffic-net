@@ -74,7 +74,7 @@ python3 scripts/build_train_ready_full.py \
 python3 scripts/run_tabular_baselines.py \
   --data-dir data/data_train/d7_active_giant_full \
   --out-dir data/outputs/tabular_baselines \
-  --percentiles p99 p97 \
+  --percentiles p97 \
   --models logistic xgboost
 ```
 
@@ -85,7 +85,6 @@ data/outputs/tabular_baselines/
   metrics_summary.csv
   run_config.json
   p97/{fold}/...
-  p99/{fold}/...
 ```
 
 For a quick smoke test, run only one fold and one XGBoost boosting round:
@@ -94,7 +93,7 @@ For a quick smoke test, run only one fold and one XGBoost boosting round:
 python3 scripts/run_tabular_baselines.py \
   --data-dir data/data_train/d7_active_giant_full \
   --out-dir data/outputs/tabular_baselines_smoke \
-  --percentiles p99 \
+  --percentiles p97 \
   --folds fold_1_train2016_2020_val2021_test2022 \
   --models xgboost \
   --xgb-rounds 1 \
