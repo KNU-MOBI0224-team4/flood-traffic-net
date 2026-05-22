@@ -1,8 +1,10 @@
 # Train-Ready Data
 
-This directory contains model-ready arrays generated from `data_sample/`.
+This directory contains model-ready arrays. The compact January 2016 sample is
+tracked in GitHub; the full-period training package is generated locally and
+ignored by Git.
 
-Current package:
+Tracked sample package:
 
 ```text
 data_train/
@@ -31,7 +33,38 @@ data_train/
     manifest.json
 ```
 
+Local full-period package:
+
+```text
+data_train/
+  d7_active_giant_full/
+    graph/
+      A.npy
+      edge_index.csv
+      graph_spec.json
+      node_ids.csv
+    features/
+      X_dynamic.npy
+      input_mask.npy
+      continuous_prev_hour.npy
+      feature_spec.json
+      timestamps.csv
+    labels/{p97,p99}/{fold}/
+      y.npy
+      z.npy
+      z_mask.npy
+      label_available.npy
+      split_code.npy
+      X_static.csv
+      label_node_thresholds.csv
+      label_summary.json
+      target_spec.json
+    manifest.json
+```
+
 ## Arrays
+
+For the tracked January 2016 sample:
 
 - `features/X_dynamic.npz`
   - `X_dynamic`: shape `(T, N, F) = (744, 329, 7)`
@@ -63,7 +96,7 @@ past/current information at anchor time `t` and do not leak future information.
 
 ## Regeneration
 
-Run this from the repository root:
+Regenerate the tracked January 2016 sample from the repository root:
 
 ```bash
 python3 scripts/build_train_ready_sample.py
@@ -71,3 +104,28 @@ python3 scripts/build_train_ready_sample.py
 
 The script uses only the Python standard library and writes NumPy-compatible
 `.npz` files.
+
+Build the full-period local package:
+
+```bash
+python3 scripts/build_train_ready_full.py
+```
+
+The full-period package is written to `data/data_train/d7_active_giant_full/`
+and is excluded from GitHub by `.gitignore`.
+
+## Baseline Training
+
+Tabular baselines consume the full-period package:
+
+```bash
+python3 scripts/run_tabular_baselines.py \
+  --data-dir data/data_train/d7_active_giant_full \
+  --out-dir data/outputs/tabular_baselines \
+  --percentiles p99 p97 \
+  --models logistic xgboost
+```
+
+The shared metric and timestamp sampling implementations live under
+`scripts/flood_traffic/` so future baselines and graph/sequence models can
+reuse the same evaluation protocol.

@@ -4,6 +4,9 @@ This directory contains source-style D7 sample files for model development and
 team onboarding. These files are useful for inspecting the original tabular
 format before it is converted into train-ready tensors under `data_train/`.
 
+This sample is intentionally tracked in GitHub. Full-period generated tensors
+and model outputs are not tracked.
+
 ## Layout
 
 ```text
@@ -51,6 +54,14 @@ The supervised target is `z`, evaluated and trained only where `z_mask == 1`.
 The state label `y` is kept for event interpretation and for constructing the
 onset target, but it should not be used directly as the training target for the
 current onset-prediction task.
+
+The train-ready version of this sample is generated with:
+
+```bash
+python3 scripts/build_train_ready_sample.py
+```
+
+from the repository root.
 
 ## Rolling Folds
 
