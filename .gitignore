@@ -1,0 +1,6 @@
+.venv/
+data/data_train/d7_active_giant_full/
+data/outputs/
+*.pyc
+__pycache__/
+.DS_Store
