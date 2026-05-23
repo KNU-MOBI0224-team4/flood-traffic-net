@@ -145,6 +145,13 @@ def fit(
         }
 
         history.append(epoch_info)
+        print(
+            f"epoch={epoch+1} "
+            f"train_loss={total_loss/len(train_loader):.6f} "
+            f"val_auprc={val_auprc:.6f}"
+            )
+
+
 
         if val_auprc > best_val_auprc:
 
