@@ -48,7 +48,7 @@ class GRUClassifier(nn.Module):
 
         logits = self.fc(last_hidden)
 
-        return logits.squeeze(1)
+        return logits.squeeze(-1)
 
 
 def fit(
@@ -176,7 +176,7 @@ def fit(
 
 
 def predict(
-    model: Any,
+    model: nn.Module,
     X: np.ndarray,
     batch_size: int = 512,
     device: str = "cpu",
@@ -204,7 +204,9 @@ def predict(
 
             scores = torch.sigmoid(logits)
 
-            outputs.append(scores.cpu().numpy())
+            outputs.append( np.asarray(scores.cpu().numpy(), dtype=np.float64, ).reshape(-1) )
 
+    if len(outputs) == 0:
+        return np.array([], dtype=np.float64)
     return np.concatenate(outputs).astype(np.float64)
 
