@@ -51,7 +51,6 @@ def run_one(
     )
    
 
-
     run_dir = out_dir / percentile / fold
 
     write_json( run_dir / "dataset_summary.json", fold_data.dataset_summary, )
@@ -105,7 +104,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument( "--data-dir", type=Path, default=data_root / "data_train/d7_active_giant_2016_01", )
     parser.add_argument( "--out-dir", type=Path, default=data_root / "outputs/gru_baseline", )
-    parser.add_argument( "--percentiles", nargs="+", default=["p99"], )
+    parser.add_argument( "--percentiles", nargs="+", default=["p97"], )
     parser.add_argument( "--folds", nargs="+", default=["fold_1_train2016_2020_val2021_test2022"], )
     parser.add_argument( "--positive-timestamp-ratio", type=float, default=0.20, )
     parser.add_argument( "--min-precision", type=float, default=0.10, )
