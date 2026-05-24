@@ -19,8 +19,10 @@ import torch
 from torch.utils.data import Dataset
 
 from flood_traffic.constants import SPLIT_TO_CODE
-from flood_traffic.io_utils import load_adjacency
+from flood_traffic.io_utils import load_adjacency, load_node_ids, load_static
+from flood_traffic.metrics import build_adjacency_list
 from flood_traffic.sampling import sample_train_timestamps
+from flood_traffic.tabular_data import TabularSplit, build_split_rows, build_y_state_rows
 
 
 @dataclass
@@ -29,6 +31,14 @@ class STGCNFoldData:
     val_dataset: "STGCNDataset"
     test_dataset: "STGCNDataset"
     A_hat: np.ndarray
+    val_split: TabularSplit
+    test_split: TabularSplit
+    val_y_state_t: np.ndarray
+    val_y_state_n: np.ndarray
+    test_y_state_t: np.ndarray
+    test_y_state_n: np.ndarray
+    adjacency: list[list[int]]
+    continuous_prev_hour: np.ndarray
     feature_stats: dict[str, Any]
     train_summary: dict[str, Any]
     dataset_summary: dict[str, Any]
@@ -91,12 +101,21 @@ def load_graph_fold_data(
     seed: int,
 ) -> STGCNFoldData:
     X_dynamic = np.asarray(np.load(data_dir / "features/X_dynamic.npy"), dtype=np.float32)
+    input_mask = np.load(data_dir / "features/input_mask.npy", mmap_mode="r")
+    continuous_prev_hour = np.load(
+        data_dir / "features/continuous_prev_hour.npy", mmap_mode="r"
+    ).astype(bool)
     A_hat = load_adjacency(data_dir / "graph/A.npy")
+    A_raw = np.load(data_dir / "graph/A.npy", mmap_mode="r")
+    adjacency = build_adjacency_list(np.asarray(A_raw))
+    node_ids = load_node_ids(data_dir / "graph/node_ids.csv")
 
     target_dir = data_dir / "labels" / percentile / fold
+    y_state = np.load(target_dir / "y.npy", mmap_mode="r")
     z = np.asarray(np.load(target_dir / "z.npy"), dtype=np.float32)
     z_mask = np.asarray(np.load(target_dir / "z_mask.npy")).astype(np.bool_)
     split_code = np.asarray(np.load(target_dir / "split_code.npy"))
+    static, _ = load_static(target_dir / "X_static.csv", node_ids)
 
     selected_train_ts, train_summary = sample_train_timestamps(
         split_code=split_code,
@@ -125,6 +144,19 @@ def load_graph_fold_data(
     train_dataset = STGCNDataset(X_norm, z, z_mask, train_target_ts, seq_len, pred_horizon)
     val_dataset = STGCNDataset(X_norm, z, z_mask, val_target_ts, seq_len, pred_horizon)
     test_dataset = STGCNDataset(X_norm, z, z_mask, test_target_ts, seq_len, pred_horizon)
+
+    val_split = build_split_rows(
+        X_dynamic, input_mask, z, z_mask, static, val_target_ts.astype(np.int32)
+    )
+    test_split = build_split_rows(
+        X_dynamic, input_mask, z, z_mask, static, test_target_ts.astype(np.int32)
+    )
+    _, val_y_state_t, val_y_state_n = build_y_state_rows(
+        X_dynamic, input_mask, y_state, static, val_target_ts.astype(np.int32)
+    )
+    _, test_y_state_t, test_y_state_n = build_y_state_rows(
+        X_dynamic, input_mask, y_state, static, test_target_ts.astype(np.int32)
+    )
 
     feature_stats = {
         "mean": mean.reshape(-1).tolist(),
@@ -156,6 +188,14 @@ def load_graph_fold_data(
         val_dataset=val_dataset,
         test_dataset=test_dataset,
         A_hat=A_hat,
+        val_split=val_split,
+        test_split=test_split,
+        val_y_state_t=val_y_state_t,
+        val_y_state_n=val_y_state_n,
+        test_y_state_t=test_y_state_t,
+        test_y_state_n=test_y_state_n,
+        adjacency=adjacency,
+        continuous_prev_hour=np.asarray(continuous_prev_hour),
         feature_stats=feature_stats,
         train_summary=train_summary,
         dataset_summary=dataset_summary,
