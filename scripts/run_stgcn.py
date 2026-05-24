@@ -103,7 +103,7 @@ def run_one(
 def parse_args() -> argparse.Namespace:
     data_root = Path(__file__).resolve().parents[1] / "data"
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-dir", type=Path, default=data_root / "data_train/d7_active_giant_full")
+    parser.add_argument("--data-dir", type=Path, default=data_root / "train_ready/d7_active_giant_full")
     parser.add_argument("--out-dir", type=Path, default=data_root / "outputs/stgcn")
     parser.add_argument("--percentiles", nargs="+", default=PERCENTILES)
     parser.add_argument("--folds", nargs="+", default=FOLDS)

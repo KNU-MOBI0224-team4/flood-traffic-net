@@ -389,7 +389,7 @@ def main() -> None:
     parser.add_argument(
         "--out-dir",
         type=Path,
-        default=data_root / "data_train" / "d7_active_giant_full",
+        default=data_root / "train_ready" / "d7_active_giant_full",
     )
     parser.add_argument("--label-root", type=Path, default=None)
     parser.add_argument("--speed-feature-column", default="avg_speed_median")

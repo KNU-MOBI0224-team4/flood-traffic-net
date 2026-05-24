@@ -10,8 +10,9 @@ locally and are intentionally not pushed to GitHub.
 
 ```text
 data/
-  data_sample/                         # tracked source-style January 2016 sample
-  data_train/
+  raw/
+    d7_active_giant_2016_01/           # tracked source-style January 2016 sample
+  train_ready/
     d7_active_giant_2016_01/           # tracked train-ready January 2016 sample
     d7_active_giant_full/              # local full-period data, gitignored
   outputs/                             # local model outputs, gitignored
@@ -29,9 +30,9 @@ scripts/
 
 ## Data Policy
 
-- `data/data_sample/` is a small source-style sample and should stay tracked.
-- `data/data_train/d7_active_giant_2016_01/` is a small train-ready sample and should stay tracked.
-- `data/data_train/d7_active_giant_full/` is the full-period training dataset and is gitignored.
+- `data/raw/d7_active_giant_2016_01/` is a small source-style sample and should stay tracked.
+- `data/train_ready/d7_active_giant_2016_01/` is a small train-ready sample and should stay tracked.
+- `data/train_ready/d7_active_giant_full/` is the full-period training dataset and is gitignored.
 - `data/outputs/` contains experiment outputs and is gitignored.
 
 ## Quick Start
@@ -58,7 +59,7 @@ python3 scripts/build_train_ready_sample.py
 python3 scripts/build_train_ready_full.py
 ```
 
-This writes local arrays to `data/data_train/d7_active_giant_full/`.
+This writes local arrays to `data/train_ready/d7_active_giant_full/`.
 
 If the processed research data is not in the default sibling directory
 `../Flood_induced_road_paralysis`, pass it explicitly:
@@ -72,7 +73,7 @@ python3 scripts/build_train_ready_full.py \
 
 ```bash
 python3 scripts/run_tabular_baselines.py \
-  --data-dir data/data_train/d7_active_giant_full \
+  --data-dir data/train_ready/d7_active_giant_full \
   --out-dir data/outputs/tabular_baselines \
   --percentiles p97 \
   --models logistic xgboost
@@ -91,7 +92,7 @@ For a quick smoke test, run only one fold and one XGBoost boosting round:
 
 ```bash
 python3 scripts/run_tabular_baselines.py \
-  --data-dir data/data_train/d7_active_giant_full \
+  --data-dir data/train_ready/d7_active_giant_full \
   --out-dir data/outputs/tabular_baselines_smoke \
   --percentiles p97 \
   --folds fold_1_train2016_2020_val2021_test2022 \

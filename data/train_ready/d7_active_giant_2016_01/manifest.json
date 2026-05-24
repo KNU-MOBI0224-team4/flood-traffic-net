@@ -1,7 +1,7 @@
 {
   "dataset": "d7_active_giant_2016_01",
-  "source": "data_sample",
-  "output": "data_train/d7_active_giant_2016_01",
+  "source": "data/raw/d7_active_giant_2016_01",
+  "output": "data/train_ready/d7_active_giant_2016_01",
   "graph": {
     "node_count": 329,
     "undirected_edge_count": 774,
