@@ -433,13 +433,13 @@ def main() -> None:
         "--repo-root",
         type=Path,
         default=Path(__file__).resolve().parents[1],
-        help="Repository root containing data/data_sample/.",
+        help="Repository root containing data/raw/d7_active_giant_2016_01/.",
     )
     args = parser.parse_args()
 
     repo_root = args.repo_root
-    source_dir = repo_root / "data" / "data_sample"
-    out_dir = repo_root / "data" / "data_train" / "d7_active_giant_2016_01"
+    source_dir = repo_root / "data" / "raw" / "d7_active_giant_2016_01"
+    out_dir = repo_root / "data" / "train_ready" / "d7_active_giant_2016_01"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     nodes = read_csv_rows(source_dir / "graph/d7_active_giant/D7_active_giant_nodes.csv")
@@ -463,8 +463,8 @@ def main() -> None:
         out_dir / "manifest.json",
         {
             "dataset": "d7_active_giant_2016_01",
-            "source": "data/data_sample",
-            "output": "data/data_train/d7_active_giant_2016_01",
+            "source": "data/raw/d7_active_giant_2016_01",
+            "output": "data/train_ready/d7_active_giant_2016_01",
             "graph": graph_summary,
             "features": feature_summary,
             "labels": label_summary,

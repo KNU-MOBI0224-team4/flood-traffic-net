@@ -7,7 +7,7 @@ ignored by Git.
 Tracked sample package:
 
 ```text
-data_train/
+train_ready/
   d7_active_giant_2016_01/
     graph/
       A.npz
@@ -36,7 +36,7 @@ data_train/
 Local full-period package:
 
 ```text
-data_train/
+train_ready/
   d7_active_giant_full/
     graph/
       A.npy
@@ -111,7 +111,7 @@ Build the full-period local package:
 python3 scripts/build_train_ready_full.py
 ```
 
-The full-period package is written to `data/data_train/d7_active_giant_full/`
+The full-period package is written to `data/train_ready/d7_active_giant_full/`
 and is excluded from GitHub by `.gitignore`.
 
 ## Baseline Training
@@ -120,7 +120,7 @@ Tabular baselines consume the full-period package:
 
 ```bash
 python3 scripts/run_tabular_baselines.py \
-  --data-dir data/data_train/d7_active_giant_full \
+  --data-dir data/train_ready/d7_active_giant_full \
   --out-dir data/outputs/tabular_baselines \
   --percentiles p99 p97 \
   --models logistic xgboost

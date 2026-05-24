@@ -1,8 +1,8 @@
-# Data Sample
+# Data Raw
 
 This directory contains source-style D7 sample files for model development and
 team onboarding. These files are useful for inspecting the original tabular
-format before it is converted into train-ready tensors under `data_train/`.
+format before it is converted into train-ready tensors under `train_ready/`.
 
 This sample is intentionally tracked in GitHub. Full-period generated tensors
 and model outputs are not tracked.
@@ -10,7 +10,7 @@ and model outputs are not tracked.
 ## Layout
 
 ```text
-data_sample/
+raw/d7_active_giant_2016_01/
   graph/d7_active_giant/
     D7_active_giant_nodes.csv
     D7_active_giant_adjacency_edges.csv
