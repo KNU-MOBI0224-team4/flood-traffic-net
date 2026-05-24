@@ -58,3 +58,11 @@ def load_static(static_csv: Path, node_ids: list[str]) -> tuple[np.ndarray, list
                 values[node_idx, feature_idx] = np.nan
     return values, STATIC_FEATURES.copy()
 
+
+def load_adjacency(path: Path) -> np.ndarray:
+    """Load adjacency from .npy and return D^(-1/2) (A + I) D^(-1/2)."""
+    A = np.asarray(np.load(path, mmap_mode="r")).astype(np.float32, copy=True)
+    A += np.eye(A.shape[0], dtype=np.float32)
+    d_inv_sqrt = 1.0 / np.sqrt(A.sum(axis=1) + 1e-8)
+    return (A * d_inv_sqrt[None, :]) * d_inv_sqrt[:, None]
+

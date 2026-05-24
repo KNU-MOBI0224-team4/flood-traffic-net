@@ -62,7 +62,7 @@ def result_row(
         "selected_train_timestamps": train_summary["selected_timestamps"],
         "selected_positive_timestamp_ratio": train_summary["selected_positive_timestamp_ratio"],
         "model_selection": json.dumps(
-            {k: v for k, v in model_info.items() if k not in {"evals_result", "trials"}},
+            {k: v for k, v in model_info.items() if k not in {"evals_result", "trials", "history"}},
             default=str,
         ),
     }
