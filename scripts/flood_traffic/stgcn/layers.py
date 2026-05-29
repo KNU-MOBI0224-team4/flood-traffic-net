@@ -7,9 +7,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-CHEB_K = 3
-
-
 class TemporalConv(nn.Module):
     """GLU temporal convolution applied per node.
 
@@ -48,7 +45,7 @@ class GraphConv(nn.Module):
     Input shape: (B, T, N, C_in), A_hat shape: (N, N).
     Output shape: (B, T, N, C_out).
 
-    Uses fixed K=3 Chebyshev supports:
+    Uses K Chebyshev supports:
         [T_0(X), T_1(X), ..., T_{K-1}(X)]
     where T_0(X)=X, T_1(X)=A_hat X, and
     T_k(X)=2 A_hat T_{k-1}(X)-T_{k-2}(X).
@@ -60,10 +57,14 @@ class GraphConv(nn.Module):
         out_channels: int,
         static_dim: int = 0,
         static_embedding_dim: int = 8,
+        cheb_k: int = 3,
     ) -> None:
         super().__init__()
         self.static_dim = int(static_dim)
         self.static_embedding_dim = int(static_embedding_dim)
+        self.cheb_k = int(cheb_k)
+        if self.cheb_k < 1:
+            raise ValueError("cheb_k must be >= 1")
         if self.static_dim > 0:
             self.static_encoder = nn.Linear(self.static_dim, self.static_embedding_dim)
             self.static_projection = nn.Linear(
@@ -72,7 +73,7 @@ class GraphConv(nn.Module):
         else:
             self.static_encoder = None
             self.static_projection = None
-        self.linear = nn.Linear(in_channels * CHEB_K, out_channels)
+        self.linear = nn.Linear(in_channels * self.cheb_k, out_channels)
 
     @staticmethod
     def _propagate(A_hat: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
@@ -80,8 +81,10 @@ class GraphConv(nn.Module):
 
     def _chebyshev_stack(self, x: torch.Tensor, A_hat: torch.Tensor) -> torch.Tensor:
         supports = [x]
+        if self.cheb_k == 1:
+            return supports[0]
         supports.append(self._propagate(A_hat, x))
-        for _ in range(2, CHEB_K):
+        for _ in range(2, self.cheb_k):
             supports.append(2.0 * self._propagate(A_hat, supports[-1]) - supports[-2])
         return torch.cat(supports, dim=-1)
 

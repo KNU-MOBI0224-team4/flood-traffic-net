@@ -18,6 +18,7 @@ class STConvBlock(nn.Module):
         dropout: float = 0.3,
         static_dim: int = 0,
         static_embedding_dim: int = 8,
+        cheb_k: int = 3,
     ) -> None:
         super().__init__()
         self.temp_conv1 = TemporalConv(in_channels, hidden_channels, kernel_size)
@@ -26,6 +27,7 @@ class STConvBlock(nn.Module):
             hidden_channels,
             static_dim=static_dim,
             static_embedding_dim=static_embedding_dim,
+            cheb_k=cheb_k,
         )
         self.temp_conv2 = TemporalConv(hidden_channels, out_channels, kernel_size)
         self.dropout = nn.Dropout(dropout)

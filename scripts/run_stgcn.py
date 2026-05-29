@@ -37,6 +37,7 @@ def fit_stgcn(fold_graph: STGCNFoldData, args: argparse.Namespace) -> tuple[str,
         kernel_size=args.kernel_size,
         dropout=args.dropout,
         static_embedding_dim=args.static_embedding_dim,
+        cheb_k=args.cheb_k,
         epochs=args.epochs,
         lr=args.lr,
         batch_size=args.batch_size,
@@ -149,6 +150,12 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=8,
         help="Embedding dimension for static node features before GCN propagation.",
+    )
+    parser.add_argument(
+        "--cheb-k",
+        type=int,
+        default=3,
+        help="Number of Chebyshev polynomial supports. The spatial layer always uses Chebyshev graph convolution.",
     )
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--lr", type=float, default=1e-4)

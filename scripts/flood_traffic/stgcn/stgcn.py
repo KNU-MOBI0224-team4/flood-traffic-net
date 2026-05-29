@@ -20,6 +20,7 @@ class STGCN(nn.Module):
         dropout: float = 0.3,
         static_dim: int = 0,
         static_embedding_dim: int = 8,
+        cheb_k: int = 3,
     ) -> None:
         super().__init__()
         self.num_nodes = num_nodes
@@ -31,6 +32,7 @@ class STGCN(nn.Module):
             dropout=dropout,
             static_dim=static_dim,
             static_embedding_dim=static_embedding_dim,
+            cheb_k=cheb_k,
         )
         self.block2 = STConvBlock(
             in_channels=hidden_channels,
@@ -40,6 +42,7 @@ class STGCN(nn.Module):
             dropout=dropout,
             static_dim=static_dim,
             static_embedding_dim=static_embedding_dim,
+            cheb_k=cheb_k,
         )
         self.final_temp = TemporalConv(out_channels, out_channels, kernel_size)
         self.fc = nn.Linear(out_channels, 1)

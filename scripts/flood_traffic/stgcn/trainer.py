@@ -13,7 +13,6 @@ from torch.utils.data import DataLoader
 
 from flood_traffic.graph_data import STGCNDataset
 from flood_traffic.metrics import safe_metric
-from flood_traffic.stgcn.layers import CHEB_K
 from flood_traffic.stgcn.losses import MaskedBCEWithLogitsLoss, MaskedFocalLoss
 from flood_traffic.stgcn.stgcn import STGCN
 
@@ -105,6 +104,7 @@ def fit(
     kernel_size: int,
     dropout: float,
     static_embedding_dim: int,
+    cheb_k: int,
     epochs: int,
     lr: float,
     batch_size: int,
@@ -139,6 +139,7 @@ def fit(
         dropout=dropout,
         static_dim=static_dim,
         static_embedding_dim=static_embedding_dim,
+        cheb_k=cheb_k,
     ).to(device_obj)
 
     if loss_type == "focal":
@@ -203,7 +204,7 @@ def fit(
         "static_dim": int(static_dim),
         "static_embedding_dim": int(static_embedding_dim) if static_dim > 0 else None,
         "graph_conv_type": "cheb",
-        "cheb_k": int(CHEB_K),
+        "cheb_k": int(cheb_k),
         "focal_alpha": float(focal_alpha) if loss_type == "focal" else None,
         "focal_gamma": float(focal_gamma) if loss_type == "focal" else None,
         "pos_weight": float(pos_weight.item()),
