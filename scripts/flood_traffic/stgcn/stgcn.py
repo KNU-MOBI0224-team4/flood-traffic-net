@@ -18,6 +18,8 @@ class STGCN(nn.Module):
         out_channels: int = 64,
         kernel_size: int = 3,
         dropout: float = 0.3,
+        static_dim: int = 0,
+        static_embedding_dim: int = 8,
     ) -> None:
         super().__init__()
         self.num_nodes = num_nodes
@@ -27,6 +29,8 @@ class STGCN(nn.Module):
             out_channels=hidden_channels,
             kernel_size=kernel_size,
             dropout=dropout,
+            static_dim=static_dim,
+            static_embedding_dim=static_embedding_dim,
         )
         self.block2 = STConvBlock(
             in_channels=hidden_channels,
@@ -34,13 +38,20 @@ class STGCN(nn.Module):
             out_channels=out_channels,
             kernel_size=kernel_size,
             dropout=dropout,
+            static_dim=static_dim,
+            static_embedding_dim=static_embedding_dim,
         )
         self.final_temp = TemporalConv(out_channels, out_channels, kernel_size)
         self.fc = nn.Linear(out_channels, 1)
 
-    def forward(self, x: torch.Tensor, A_hat: torch.Tensor) -> torch.Tensor:
-        x = self.block1(x, A_hat)
-        x = self.block2(x, A_hat)
+    def forward(
+        self,
+        x: torch.Tensor,
+        A_hat: torch.Tensor,
+        static_features: torch.Tensor | None = None,
+    ) -> torch.Tensor:
+        x = self.block1(x, A_hat, static_features)
+        x = self.block2(x, A_hat, static_features)
         x = self.final_temp(x)
         x = x[:, -1]
         x = self.fc(x)

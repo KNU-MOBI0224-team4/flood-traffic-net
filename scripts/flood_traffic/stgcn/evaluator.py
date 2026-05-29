@@ -45,6 +45,7 @@ def _align_scores(
 def evaluate_stgcn_outputs(
     model: STGCN,
     A_hat: np.ndarray,
+    static_features: np.ndarray | None,
     val_dataset: STGCNDataset,
     test_dataset: STGCNDataset,
     val_split: TabularSplit,
@@ -60,10 +61,10 @@ def evaluate_stgcn_outputs(
     device: str,
 ) -> tuple[dict[str, Any], dict[str, Any], float]:
     val_target_ts, val_scores_mat = predict_score_matrix(
-        model, val_dataset, A_hat, batch_size, device
+        model, val_dataset, A_hat, static_features, batch_size, device
     )
     test_target_ts, test_scores_mat = predict_score_matrix(
-        model, test_dataset, A_hat, batch_size, device
+        model, test_dataset, A_hat, static_features, batch_size, device
     )
 
     val_score = _align_scores(
