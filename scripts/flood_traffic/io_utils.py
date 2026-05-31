@@ -4,12 +4,23 @@ from __future__ import annotations
 
 import csv
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
 from flood_traffic.constants import STATIC_FEATURES
+
+
+TIME_FEATURE_NAMES = [
+    "sin_hour",
+    "cos_hour",
+    "sin_dow",
+    "cos_dow",
+    "sin_month",
+    "cos_month",
+]
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -65,4 +76,33 @@ def load_adjacency(path: Path) -> np.ndarray:
     A += np.eye(A.shape[0], dtype=np.float32)
     d_inv_sqrt = 1.0 / np.sqrt(A.sum(axis=1) + 1e-8)
     return (A * d_inv_sqrt[None, :]) * d_inv_sqrt[:, None]
+
+
+def compute_time_features(timestamps_csv: Path) -> np.ndarray:
+    """Compute calendar/cyclical time features from timestamps.csv.
+
+    Returns a (T, 6) float32 array with columns
+        [sin_hour, cos_hour, sin_dow, cos_dow, sin_month, cos_month]
+    All values are bounded in [-1, 1] by construction, so no further scaling
+    is needed before concatenating with z-scored dynamic features.
+
+    The cyclical sin/cos encoding ensures continuity across cycle boundaries
+    (e.g., 23h↔0h, Sun↔Mon, Dec↔Jan) — a model receiving raw integer hour
+    would not know that hour 23 and hour 0 are adjacent.
+    """
+    timestamps = load_timestamps(timestamps_csv)
+    n = len(timestamps)
+    out = np.zeros((n, len(TIME_FEATURE_NAMES)), dtype=np.float32)
+    for i, ts in enumerate(timestamps):
+        dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
+        h = dt.hour
+        dow = dt.weekday()         # 0=Mon ... 6=Sun
+        m = dt.month - 1           # 0..11
+        out[i, 0] = np.sin(2.0 * np.pi * h / 24.0)
+        out[i, 1] = np.cos(2.0 * np.pi * h / 24.0)
+        out[i, 2] = np.sin(2.0 * np.pi * dow / 7.0)
+        out[i, 3] = np.cos(2.0 * np.pi * dow / 7.0)
+        out[i, 4] = np.sin(2.0 * np.pi * m / 12.0)
+        out[i, 5] = np.cos(2.0 * np.pi * m / 12.0)
+    return out
 

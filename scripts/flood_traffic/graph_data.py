@@ -19,7 +19,13 @@ import torch
 from torch.utils.data import Dataset
 
 from flood_traffic.constants import SPLIT_TO_CODE
-from flood_traffic.io_utils import load_adjacency, load_node_ids, load_static
+from flood_traffic.io_utils import (
+    TIME_FEATURE_NAMES,
+    compute_time_features,
+    load_adjacency,
+    load_node_ids,
+    load_static,
+)
 from flood_traffic.metrics import build_adjacency_list
 from flood_traffic.sampling import sample_train_timestamps
 from flood_traffic.tabular_data import TabularSplit, build_split_rows, build_y_state_rows
@@ -31,6 +37,7 @@ class STGCNFoldData:
     val_dataset: "STGCNDataset"
     test_dataset: "STGCNDataset"
     A_hat: np.ndarray
+    static: np.ndarray | None
     val_split: TabularSplit
     test_split: TabularSplit
     val_y_state_t: np.ndarray
@@ -99,6 +106,9 @@ def load_graph_fold_data(
     pred_horizon: int,
     positive_timestamp_ratio: float,
     seed: int,
+    use_static: bool = True,
+    use_input_mask: bool = True,
+    use_time_features: bool = False,
 ) -> STGCNFoldData:
     X_dynamic = np.asarray(np.load(data_dir / "features/X_dynamic.npy"), dtype=np.float32)
     input_mask = np.load(data_dir / "features/input_mask.npy", mmap_mode="r")
@@ -141,9 +151,28 @@ def load_graph_fold_data(
     X_norm = (X_dynamic - mean) / std_safe
     X_norm = np.nan_to_num(X_norm, nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32)
 
-    train_dataset = STGCNDataset(X_norm, z, z_mask, train_target_ts, seq_len, pred_horizon)
-    val_dataset = STGCNDataset(X_norm, z, z_mask, val_target_ts, seq_len, pred_horizon)
-    test_dataset = STGCNDataset(X_norm, z, z_mask, test_target_ts, seq_len, pred_horizon)
+    static_clean = np.nan_to_num(static, nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32)
+    static_model_input = static_clean if use_static else None
+
+    channels: list[np.ndarray] = [X_norm]
+    input_mask_arr = np.asarray(input_mask, dtype=np.float32)
+    if use_input_mask:
+        # Mask channels let the model tell "imputed zero" from "actually average value".
+        channels.append(input_mask_arr)
+    time_feat: np.ndarray | None = None
+    if use_time_features:
+        # sin/cos (hour, dow, month) already bounded in [-1, 1] — no z-score.
+        # Broadcast (T, F_time) → (T, N, F_time).
+        time_feat = compute_time_features(data_dir / "features/timestamps.csv")
+        assert time_feat.shape[0] == T, (
+            f"time_features T={time_feat.shape[0]} does not match X_dynamic T={T}"
+        )
+        channels.append(np.broadcast_to(time_feat[:, None, :], (T, N, time_feat.shape[1])))
+    X_model_input = np.concatenate(channels, axis=2).astype(np.float32)
+
+    train_dataset = STGCNDataset(X_model_input, z, z_mask, train_target_ts, seq_len, pred_horizon)
+    val_dataset = STGCNDataset(X_model_input, z, z_mask, val_target_ts, seq_len, pred_horizon)
+    test_dataset = STGCNDataset(X_model_input, z, z_mask, test_target_ts, seq_len, pred_horizon)
 
     val_split = build_split_rows(
         X_dynamic, input_mask, z, z_mask, static, val_target_ts.astype(np.int32)
@@ -172,6 +201,10 @@ def load_graph_fold_data(
             "time_count": int(T),
             "node_count": int(N),
             "dynamic_feature_count": int(F),
+            "static_feature_count": int(static_clean.shape[1]) if use_static else 0,
+            "input_mask_channel_count": int(input_mask_arr.shape[2]) if use_input_mask else 0,
+            "time_feature_count": int(time_feat.shape[1]) if time_feat is not None else 0,
+            "model_input_channels": int(X_model_input.shape[2]),
         },
         "sampling": train_summary,
         "targets_after_window_filter": {
@@ -180,7 +213,11 @@ def load_graph_fold_data(
             "test": int(len(test_target_ts)),
         },
         "feature_stats": feature_stats,
-        "static_features_used": False,
+        "static_features_used": bool(use_static),
+        "static_injection": "gcn_input_initialization" if use_static else "disabled",
+        "input_mask_as_channel": bool(use_input_mask),
+        "time_features_used": bool(use_time_features),
+        "time_feature_names": TIME_FEATURE_NAMES if use_time_features else [],
     }
 
     return STGCNFoldData(
@@ -188,6 +225,7 @@ def load_graph_fold_data(
         val_dataset=val_dataset,
         test_dataset=test_dataset,
         A_hat=A_hat,
+        static=static_model_input,
         val_split=val_split,
         test_split=test_split,
         val_y_state_t=val_y_state_t,

@@ -16,16 +16,30 @@ class STConvBlock(nn.Module):
         out_channels: int,
         kernel_size: int = 3,
         dropout: float = 0.3,
+        static_dim: int = 0,
+        static_embedding_dim: int = 8,
+        cheb_k: int = 3,
     ) -> None:
         super().__init__()
         self.temp_conv1 = TemporalConv(in_channels, hidden_channels, kernel_size)
-        self.graph_conv = GraphConv(hidden_channels, hidden_channels)
+        self.graph_conv = GraphConv(
+            hidden_channels,
+            hidden_channels,
+            static_dim=static_dim,
+            static_embedding_dim=static_embedding_dim,
+            cheb_k=cheb_k,
+        )
         self.temp_conv2 = TemporalConv(hidden_channels, out_channels, kernel_size)
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, x: torch.Tensor, A_hat: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        x: torch.Tensor,
+        A_hat: torch.Tensor,
+        static_features: torch.Tensor | None = None,
+    ) -> torch.Tensor:
         x = self.temp_conv1(x)
-        x = self.graph_conv(x, A_hat)
+        x = self.graph_conv(x, A_hat, static_features)
         x = self.temp_conv2(x)
         x = self.dropout(x)
         return x

@@ -29,12 +29,15 @@ def fit_stgcn(fold_graph: STGCNFoldData, args: argparse.Namespace) -> tuple[str,
         train_dataset=fold_graph.train_dataset,
         val_dataset=fold_graph.val_dataset,
         A_hat=fold_graph.A_hat,
+        static_features=fold_graph.static,
         num_nodes=num_nodes,
         in_channels=in_channels,
         hidden_channels=args.hidden_channels,
         out_channels=args.out_channels,
         kernel_size=args.kernel_size,
         dropout=args.dropout,
+        static_embedding_dim=args.static_embedding_dim,
+        cheb_k=args.cheb_k,
         epochs=args.epochs,
         lr=args.lr,
         batch_size=args.batch_size,
@@ -42,6 +45,10 @@ def fit_stgcn(fold_graph: STGCNFoldData, args: argparse.Namespace) -> tuple[str,
         grad_clip=args.grad_clip,
         device=args.device,
         seed=args.seed,
+        early_stopping_patience=args.early_stopping_patience,
+        loss_type=args.loss,
+        focal_alpha=args.focal_alpha,
+        focal_gamma=args.focal_gamma,
     )
     return trainer.MODEL_NAME, model, info
 
@@ -62,6 +69,9 @@ def run_one(
         pred_horizon=args.pred_horizon,
         positive_timestamp_ratio=args.positive_timestamp_ratio,
         seed=args.seed,
+        use_static=args.static,
+        use_input_mask=args.input_mask,
+        use_time_features=args.time_features,
     )
 
     run_dir = out_dir / percentile / fold
@@ -73,6 +83,7 @@ def run_one(
     val_metrics, test_metrics, tau = evaluate_stgcn_outputs(
         model=model,
         A_hat=fold_graph.A_hat,
+        static_features=fold_graph.static,
         val_dataset=fold_graph.val_dataset,
         test_dataset=fold_graph.test_dataset,
         val_split=fold_graph.val_split,
@@ -112,14 +123,59 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--seq-len", type=int, default=12)
     parser.add_argument("--pred-horizon", type=int, default=1)
+    parser.add_argument(
+        "--static",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Inject static node features at the GCN input initialization stage.",
+    )
+    parser.add_argument(
+        "--input-mask",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Include input_mask as extra channels so the model can tell imputed values from observed ones.",
+    )
+    parser.add_argument(
+        "--time-features",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Include cyclical time features (sin/cos of hour, dow, month) as extra channels.",
+    )
     parser.add_argument("--hidden-channels", type=int, default=32)
     parser.add_argument("--out-channels", type=int, default=64)
     parser.add_argument("--kernel-size", type=int, default=3)
     parser.add_argument("--dropout", type=float, default=0.3)
+    parser.add_argument(
+        "--static-embedding-dim",
+        type=int,
+        default=8,
+        help="Embedding dimension for static node features before GCN propagation.",
+    )
+    parser.add_argument(
+        "--cheb-k",
+        type=int,
+        default=3,
+        help="Number of Chebyshev polynomial supports. The spatial layer always uses Chebyshev graph convolution.",
+    )
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--pos-weight-cap", type=float, default=50.0)
+    parser.add_argument(
+        "--loss",
+        type=str,
+        choices=["bce", "focal"],
+        default="bce",
+        help="Loss function. 'bce' = BCE with pos_weight; 'focal' = Focal Loss (ignores pos_weight).",
+    )
+    parser.add_argument("--focal-alpha", type=float, default=0.25)
+    parser.add_argument("--focal-gamma", type=float, default=2.0)
+    parser.add_argument(
+        "--early-stopping-patience",
+        type=int,
+        default=5,
+        help="Stop if val_auprc does not improve for N epochs. 0 disables.",
+    )
     parser.add_argument("--grad-clip", type=float, default=5.0)
     parser.add_argument(
         "--device",
