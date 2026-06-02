@@ -38,6 +38,7 @@ def fit_stgcn(fold_graph: STGCNFoldData, args: argparse.Namespace) -> tuple[str,
         dropout=args.dropout,
         static_embedding_dim=args.static_embedding_dim,
         cheb_k=args.cheb_k,
+        hidden_layernorm=args.hidden_layernorm,
         epochs=args.epochs,
         lr=args.lr,
         batch_size=args.batch_size,
@@ -156,6 +157,12 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=3,
         help="Number of Chebyshev polynomial supports. The spatial layer always uses Chebyshev graph convolution.",
+    )
+    parser.add_argument(
+        "--hidden-layernorm",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Apply LayerNorm over hidden channels after STGCN hidden transformations.",
     )
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--lr", type=float, default=1e-4)

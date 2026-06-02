@@ -105,6 +105,7 @@ def fit(
     dropout: float,
     static_embedding_dim: int,
     cheb_k: int,
+    hidden_layernorm: bool,
     epochs: int,
     lr: float,
     batch_size: int,
@@ -140,6 +141,7 @@ def fit(
         static_dim=static_dim,
         static_embedding_dim=static_embedding_dim,
         cheb_k=cheb_k,
+        hidden_layernorm=hidden_layernorm,
     ).to(device_obj)
 
     if loss_type == "focal":
@@ -205,6 +207,7 @@ def fit(
         "static_embedding_dim": int(static_embedding_dim) if static_dim > 0 else None,
         "graph_conv_type": "cheb",
         "cheb_k": int(cheb_k),
+        "hidden_layernorm": bool(hidden_layernorm),
         "focal_alpha": float(focal_alpha) if loss_type == "focal" else None,
         "focal_gamma": float(focal_gamma) if loss_type == "focal" else None,
         "pos_weight": float(pos_weight.item()),
