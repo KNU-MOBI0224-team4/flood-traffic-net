@@ -4,3 +4,5 @@ data/outputs/
 *.pyc
 __pycache__/
 .DS_Store
+train_stgcn_forecast_time_ablation_k2.sh
+train_stgcn_forecast_time_ablation.sh
