@@ -54,45 +54,60 @@ def _build_sequence_windows(
     same forecast setup. Windows with any missing step (input_mask==0) or a
     non-finite static feature are dropped.
     """
-    X_list: list[np.ndarray] = []
-    time_list: list[np.int32] = []
-    node_list: list[np.int32] = []
-
+    T = X_dynamic.shape[0]
     node_count = X_dynamic.shape[1]
-    static_ok = np.isfinite(static).all(axis=1)
+    static_dim = static.shape[1]
+    feature_count = X_dynamic.shape[2] + static_dim
 
-    for t in timestamps:
-        last_input_t = int(t) - pred_horizon
-        start = last_input_t - seq_len + 1
-        if start < 0:
-            continue
-        for n in range(node_count):
-            if not select[t, n]:
-                continue
-            if not static_ok[n]:
-                continue
-            seq_mask = input_mask[start : last_input_t + 1, n, :]
-            if not seq_mask.all():
-                continue
-            seq_x = X_dynamic[start : last_input_t + 1, n, :]
-            static_seq = np.repeat(static[n][None, :], seq_len, axis=0)
-            seq_x = np.concatenate([seq_x, static_seq], axis=1)
+    empty = (
+        np.empty((0, seq_len, feature_count), dtype=np.float32),
+        np.array([], dtype=np.int32),
+        np.array([], dtype=np.int32),
+    )
 
-            X_list.append(seq_x.astype(np.float32))
-            time_list.append(np.int32(t))
-            node_list.append(np.int32(n))
+    timestamps = np.asarray(timestamps, dtype=np.int64)
+    min_target = seq_len - 1 + pred_horizon
+    valid_t = timestamps[(timestamps >= min_target) & (timestamps <= T - 1)]
+    if valid_t.size == 0:
+        return empty
 
-    feature_count = X_dynamic.shape[2] + static.shape[1]
-    if not X_list:
-        return (
-            np.empty((0, seq_len, feature_count), dtype=np.float32),
-            np.array([], dtype=np.int32),
-            np.array([], dtype=np.int32),
-        )
+    static_ok = np.isfinite(static).all(axis=1)  # (N,)
+
+    # Per (time, node) "fully observed" flag, then a sliding-window AND over the
+    # seq_len input steps via a cumulative-sum trick (vectorized, no Python loop):
+    # the window [le-seq_len+1 .. le] is fully observed iff its observed count
+    # equals seq_len.
+    obs = np.asarray(input_mask, dtype=bool).all(axis=2)  # (T, N)
+    cum = np.concatenate(
+        [np.zeros((1, node_count), dtype=np.int32), np.cumsum(obs, axis=0, dtype=np.int32)],
+        axis=0,
+    )  # (T+1, N)
+    last_input_t = valid_t - pred_horizon  # (V,)
+    win_obs = (cum[last_input_t + 1] - cum[last_input_t - seq_len + 1]) == seq_len  # (V, N)
+
+    sel_rows = np.asarray(select[valid_t]).astype(bool)  # (V, N)
+    keep = sel_rows & static_ok[None, :] & win_obs  # (V, N)
+    if not keep.any():
+        return empty
+
+    # Row-major nonzero iterates (timestamp-order, node-order), matching the
+    # original double-loop ordering so results are identical.
+    row_idx, n_sel = np.nonzero(keep)
+    t_sel = valid_t[row_idx]  # (R,)
+    start_sel = t_sel - pred_horizon - seq_len + 1  # (R,)
+
+    offsets = np.arange(seq_len, dtype=np.int64)
+    time_idx = start_sel[:, None] + offsets[None, :]  # (R, seq_len)
+    X_win = X_dynamic[time_idx, n_sel[:, None], :]  # (R, seq_len, F)
+    static_win = np.broadcast_to(
+        static[n_sel][:, None, :], (t_sel.shape[0], seq_len, static_dim)
+    )  # (R, seq_len, static)
+    X_out = np.concatenate([X_win, static_win], axis=2).astype(np.float32)
+
     return (
-        np.asarray(X_list, dtype=np.float32),
-        np.asarray(time_list, dtype=np.int32),
-        np.asarray(node_list, dtype=np.int32),
+        X_out,
+        t_sel.astype(np.int32),
+        n_sel.astype(np.int32),
     )
 
 
