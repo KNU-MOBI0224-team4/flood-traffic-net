@@ -106,3 +106,35 @@ def compute_time_features(timestamps_csv: Path) -> np.ndarray:
         out[i, 5] = np.cos(2.0 * np.pi * m / 12.0)
     return out
 
+
+def save_test_predictions(
+    path: Path,
+    global_t: np.ndarray,
+    node_idx: np.ndarray,
+    y_true: np.ndarray,
+    score: np.ndarray,
+) -> None:
+    """Save per-cell test predictions as a gzip CSV.
+
+    Columns: global_t, node_idx, y_true, score. ``y_true`` is the onset target z
+    for the evaluated cell. Used by the case-study export to align each model's
+    predictions with ground truth. A ``.gz`` suffix is gzip-compressed by numpy.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    arr = np.column_stack(
+        [
+            np.asarray(global_t, dtype=np.int64),
+            np.asarray(node_idx, dtype=np.int64),
+            np.asarray(y_true, dtype=np.int64),
+            np.asarray(score, dtype=np.float64),
+        ]
+    )
+    np.savetxt(
+        path,
+        arr,
+        delimiter=",",
+        header="global_t,node_idx,y_true,score",
+        comments="",
+        fmt=["%d", "%d", "%d", "%.8g"],
+    )
+

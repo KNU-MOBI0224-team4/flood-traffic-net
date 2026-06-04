@@ -85,6 +85,7 @@ def run_one(
             min_precision=args.min_precision,
             adjacency=fold_data.adjacency,
             continuous_prev_hour=fold_data.continuous_prev_hour,
+            test_pred_out=(run_dir / f"{model_name}_test_predictions.csv.gz") if args.dump_predictions else None,
         )
         model_info["tau"] = tau
         write_json(run_dir / f"{model_name}_metrics.json", {"val": val_metrics, "test": test_metrics, "model": model_info})
@@ -110,6 +111,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--logistic-max-iter", type=int, default=1000)
     parser.add_argument("--xgb-rounds", type=int, default=1000)
     parser.add_argument("--xgb-early-stopping-rounds", type=int, default=50)
+    parser.add_argument(
+        "--dump-predictions",
+        action="store_true",
+        help="Save per-cell test predictions (global_t,node_idx,y_true,score) for case studies.",
+    )
     return parser.parse_args()
 
 

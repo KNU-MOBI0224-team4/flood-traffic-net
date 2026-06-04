@@ -11,11 +11,13 @@ corresponding prediction.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import numpy as np
 
 from flood_traffic.graph_data import STGCNDataset
+from flood_traffic.io_utils import save_test_predictions
 from flood_traffic.metrics import evaluate_binary, strict_event_recall
 from flood_traffic.stgcn.stgcn import STGCN
 from flood_traffic.stgcn.trainer import predict_score_matrix
@@ -59,6 +61,7 @@ def evaluate_stgcn_outputs(
     continuous_prev_hour: np.ndarray,
     batch_size: int,
     device: str,
+    test_pred_out: Path | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any], float]:
     val_target_ts, val_scores_mat = predict_score_matrix(
         model, val_dataset, A_hat, static_features, batch_size, device
@@ -73,6 +76,10 @@ def evaluate_stgcn_outputs(
     test_score = _align_scores(
         test_target_ts, test_scores_mat, test_split.global_t, test_split.node_idx
     )
+    if test_pred_out is not None:
+        save_test_predictions(
+            test_pred_out, test_split.global_t, test_split.node_idx, test_split.y, test_score
+        )
 
     val_metrics, tau_info = evaluate_binary(
         val_split.y, val_score, tau=None, min_precision=min_precision

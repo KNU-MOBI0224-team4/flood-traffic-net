@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Callable
 
 import numpy as np
 
+from flood_traffic.io_utils import save_test_predictions
 from flood_traffic.metrics import evaluate_binary, strict_event_recall
 from flood_traffic.tabular_data import TabularSplit
 
@@ -23,6 +25,7 @@ def evaluate_model_outputs(
     min_precision: float,
     adjacency: list[list[int]],
     continuous_prev_hour: np.ndarray,
+    test_pred_out: Path | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any], float]:
     val_score = predict_fn(model, val_split.X)
     val_metrics, tau_info = evaluate_binary(val_split.y, val_score, tau=None, min_precision=min_precision)
@@ -41,6 +44,10 @@ def evaluate_model_outputs(
     )
 
     test_score = predict_fn(model, test_split.X)
+    if test_pred_out is not None:
+        save_test_predictions(
+            test_pred_out, test_split.global_t, test_split.node_idx, test_split.y, test_score
+        )
     test_metrics, _tau = evaluate_binary(test_split.y, test_score, tau=tau, min_precision=min_precision)
     test_metrics.update(
         strict_event_recall(

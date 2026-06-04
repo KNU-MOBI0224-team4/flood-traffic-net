@@ -98,6 +98,7 @@ def run_one(
         continuous_prev_hour=fold_graph.continuous_prev_hour,
         batch_size=args.batch_size,
         device=args.device,
+        test_pred_out=(run_dir / f"{model_name}_test_predictions.csv.gz") if args.dump_predictions else None,
     )
     model_info["tau"] = tau
     write_json(
@@ -188,6 +189,11 @@ def parse_args() -> argparse.Namespace:
         "--device",
         type=str,
         default="cuda" if torch.cuda.is_available() else "cpu",
+    )
+    parser.add_argument(
+        "--dump-predictions",
+        action="store_true",
+        help="Save per-cell test predictions (global_t,node_idx,y_true,score) for case studies.",
     )
     return parser.parse_args()
 
